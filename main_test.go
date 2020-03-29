@@ -38,6 +38,21 @@ func TestGetSources(t *testing.T) {
 	}
 }
 
+func TestGetSourcesError(t *testing.T) {
+	path := filepath.Join("testdata", "page", "page")
+	gotL, gotE := getSources(path, "", []string{}, "")
+	var wantL []string
+	var wantE error
+	wantL = nil
+	wantE = nil
+	if !stringSlicesEqual(gotL, wantL) {
+		t.Fatalf("want: %s\n got: %s", wantL, gotL)
+	}
+	if gotE != wantE {
+		t.Fatalf("want: %s\n got: %s", wantE, gotE)
+	}
+}
+
 func TestCompareDirs(t *testing.T) {
 	conf, err := readConfig("config.toml")
 	if err != nil {

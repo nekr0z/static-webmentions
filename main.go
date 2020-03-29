@@ -394,11 +394,12 @@ func getSources(path string, base string, exclude []string, relPath string) ([]s
 	if err != nil {
 		return nil, err
 	}
+
 	defer f.Close()
 
 	links, err := webmention.DiscoverLinksFromReader(f, base, ".h-entry")
 	if err != nil {
-		return nil, err
+		return nil, nil
 	}
 	exclude = append(exclude, thisPage(path, relPath, base))
 
