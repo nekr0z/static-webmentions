@@ -1,0 +1,19 @@
+baseurl = "https://my-awesome.site"
+
+[webmentions]
+newDir = "testdata/staging"         # the directory where newly created site is
+oldDir = "testdata/prod/"           # the directory where old (or current) site is
+webmentionsFile = "mentions.json"   # the file to store pending webmentions in
+  
+## pages that should not be considered as webmention sources
+excludeSources = [
+  "/tags/*",                    # only trailing * are supported at the moment
+  "posts"                       # this only excludes /posts/index.html, not /posts/somepost/
+]
+
+## addresses that we don't want to send webmentions to
+excludeDestinations = [
+  "https://my-awesome.site",    # this still allows mentioning pages other than the homepage
+  "mailto:",                    # schemes are accepted
+  "/tags"                       # relative paths for our own site include all the pages under that directory
+]

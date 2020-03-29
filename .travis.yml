@@ -1,0 +1,45 @@
+language: go
+
+go:
+  - 1.14.x
+
+os: linux
+
+dist: bionic
+
+env:
+  - GO111MODULE=on
+
+before_install:
+
+install:
+  - bash <(curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0)
+
+before_script:
+
+script:
+  - go vet ./...
+  - golangci-lint run
+  - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+  - go build
+
+before_deploy:
+  - mkdir release
+  - bash <(VER=$(go generate); for ARCH in amd64 386 arm arm64; do GOARCH=$ARCH go build -ldflags "-X main.version=$VER"; tar -czf release/static-webmentions-$VER-linux-$ARCH.tar.gz static-webmentions LICENSE README.md; done)
+
+deploy:
+  - provider: releases
+    api_key: $GITHUB_TOKEN
+    file_glob: true
+    file: release/*
+    skip_cleanup: true
+    on:
+      tags: true
+
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/gopath/pkg/mod
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
