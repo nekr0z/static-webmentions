@@ -25,7 +25,7 @@ script:
 
 before_deploy:
   - mkdir release
-  - bash <(VER=$(go generate); for ARCH in amd64 386 arm arm64; do GOARCH=$ARCH go build -ldflags "-X main.version=$VER"; tar -czf release/static-webmentions-$VER-linux-$ARCH.tar.gz static-webmentions LICENSE README.md; done)
+  - bash <(VER=$(go generate); for ARCH in amd64 386 arm arm64; do GOARCH=$ARCH go build -ldflags "-X main.version=$VER"; tar -czf release/static-webmentions-$VER-linux-$ARCH.tar.gz static-webmentions LICENSE README.md CHANGELOG.md; done)
 
 deploy:
   - provider: releases
