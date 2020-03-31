@@ -40,6 +40,7 @@ type config struct {
 	excludeSources      []string
 	excludeDestinations []string
 	storage             string
+	websubHub           string
 }
 
 type mention struct {
@@ -111,6 +112,10 @@ func main() {
 		if err != nil {
 			fmt.Printf("%v\n", err)
 			os.Exit(1)
+		}
+		if cfg.websubHub != "" {
+			feeds := findFeeds(cfg)
+			ping(cfg.websubHub, feeds)
 		}
 		sendMentions(mentions)
 		fmt.Println("all sent")
@@ -189,9 +194,13 @@ func readConfig(path string) (config, error) {
 		ExcludeDestinations []string
 		WebmentionsFile     string
 	}
+	type params struct {
+		WebsubHub string
+	}
 	type configuration struct {
 		BaseURL     string
 		Webmentions webm
+		Params      params
 	}
 	var cfg configuration
 	_, err := toml.DecodeFile(path, &cfg)
@@ -203,6 +212,7 @@ func readConfig(path string) (config, error) {
 	conf.excludeSources = cfg.Webmentions.ExcludeSources
 	conf.excludeDestinations = cfg.Webmentions.ExcludeDestinations
 	conf.storage = cfg.Webmentions.WebmentionsFile
+	conf.websubHub = cfg.Params.WebsubHub
 	return conf, err
 }
 
