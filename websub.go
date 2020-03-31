@@ -73,7 +73,18 @@ func findFeeds(conf config) []string {
 
 func feedChanged(newFile, oldFile string) bool {
 	cmp := equalfile.New(nil, equalfile.Options{}) // compare using single mode
-	equal, err := cmp.CompareFile("file1", "file2")
+	r1, err := os.Open(newFile)
+	if err != nil {
+		return false
+	}
+	defer r1.Close()
+	r2, err := os.Open(oldFile)
+	if err != nil {
+		return true
+	}
+	defer r2.Close()
+
+	equal, err := cmp.CompareReader(r1, r2)
 	if err != nil {
 		return true
 	}
