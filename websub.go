@@ -15,6 +15,9 @@ func ping(hub string, feeds []string) {
 	data := url.Values{}
 	data.Set("hub.mode", "publish")
 	feedsString := uniteFeeds(feeds)
+	if feedsString == "" {
+		return
+	}
 	data.Set("hub.url", feedsString)
 
 	u, _ := url.ParseRequestURI(hub)
