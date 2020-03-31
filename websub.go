@@ -12,13 +12,14 @@ import (
 )
 
 func ping(hub string, feeds []string) {
-	data := url.Values{}
-	data.Set("hub.mode", "publish")
-	feedsString := uniteFeeds(feeds)
-	if feedsString == "" {
+	if len(feeds) == 0 {
 		return
 	}
-	data.Set("hub.url", feedsString)
+	data := url.Values{}
+	data.Set("hub.mode", "publish")
+	for _, feed := range feeds {
+		data.Set("hub.url[]", feed)
+	}
 
 	u, _ := url.ParseRequestURI(hub)
 	urlStr := u.String()
@@ -27,18 +28,12 @@ func ping(hub string, feeds []string) {
 	r, _ := http.NewRequest("POST", urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	fmt.Printf("pinging %s\n for %s\n", hub, feedsString)
+	fmt.Printf("pinging %s\n for:\n", hub)
+	for _, feed := range feeds {
+		fmt.Println(feed)
+	}
 	resp, _ := client.Do(r)
 	fmt.Println(resp.Status)
-}
-
-func uniteFeeds(feeds []string) string {
-	var urls []string
-	for _, feed := range feeds {
-		urls = append(urls, "<"+feed+">")
-	}
-	s := strings.Join(urls, ",")
-	return s
 }
 
 func findFeeds(conf config) []string {
