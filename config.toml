@@ -17,3 +17,6 @@ excludeDestinations = [
   "mailto:",                    # schemes are accepted
   "/tags"                       # relative paths for our own site include all the pages under that directory
 ]
+
+[params]
+websubHub = "https://pubsubhubbub.superfeedr.com/"   # if this is present, will look for changes in XML files and notify the hub

@@ -81,6 +81,7 @@ This software includes the following software or parts thereof:
 * [willnorris/webmention](https://willnorris.com/go/webmention) Copyright 2014, Google Inc. All rights reserved.
 * [goquery](https://github.com/PuerkitoBio/goquery) Copyright © 2012-2016, Martin Angers & Contributors
 * [BurntSushi/toml](https://github.com/BurntSushi/toml) Copyright © 2013 TOML authors
+* [udhos/equalfile](https://github.com/udhos/equalfile) Copyright © 2016 udhos
 * [go-cmp](https://github.com/google/go-cmp) Copyright © 2017 The Go Authors. All rights reserved.
 * [cascadia](https://github.com/andybalholm/cascadia) Copyright © 2011 Andy Balholm. All rights reserved.
 * [wsxiaoys/terminal](https://github.com/wsxiaoys/terminal) Copyright © 2013 Meng Zhang. All rights reserved.
