@@ -1,0 +1,4 @@
+ErrorDocument 404 /404.html
+
+Redirect 404 "/post/somepost/"
+Redirect 410 "/post/veryoldpost"
