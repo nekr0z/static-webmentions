@@ -407,7 +407,7 @@ func getSources(path string, base string, exclude []string, relPath string) ([]s
 
 	defer f.Close()
 
-	links, err := webmention.DiscoverLinksFromReader(f, base, ".h-entry")
+	links, err := webmention.DiscoverLinksFromReader(f, postSlash(base), ".h-entry")
 	if err != nil {
 		return nil, nil
 	}
@@ -448,6 +448,16 @@ func sourceMatch(link string, exclude []string) bool {
 }
 
 func exLink(source, ex string) bool {
+	// first check for fragments and recurse if any
+	sURL, err := url.Parse(source)
+	if err == nil {
+		noFrag := *sURL
+		noFrag.Fragment = ""
+		if *sURL != noFrag {
+			return exLink(noFrag.String(), ex)
+		}
+	}
+
 	source = strings.TrimSuffix(source, "index.html")
 	source = postSlash(source)
 	ex = postSlash(ex)
@@ -460,7 +470,7 @@ func exLink(source, ex string) bool {
 		return true
 	}
 
-	sURL, err := url.Parse(source)
+	sURL, err = url.Parse(source)
 	if err != nil {
 		return false
 	}
