@@ -46,7 +46,7 @@ func TestPing(t *testing.T) {
 	buf := new(bytes.Buffer)
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(200)
-		buf.ReadFrom(r.Body)
+		_, _ = buf.ReadFrom(r.Body)
 	}))
 	defer ts.Close()
 
@@ -60,6 +60,7 @@ func TestPing(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
+			buf.Reset()
 			ping(ts.URL, tc.feeds)
 			got := buf.String()
 			if tc.result != got {
