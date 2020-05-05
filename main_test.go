@@ -16,6 +16,9 @@
 package main
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"testing"
 )
@@ -139,6 +142,54 @@ func TestThisPage(t *testing.T) {
 			got := thisPage(tc.path, tc.dir, tc.base)
 			if got != tc.want {
 				t.Fatalf("want: %v, got: %v", tc.want, got)
+			}
+		})
+	}
+}
+
+func TestSend(t *testing.T) {
+	src := "source"
+
+	okay := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+	}))
+	defer okay.Close()
+	fail := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(400)
+	}))
+	defer fail.Close()
+
+	empty := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `nothing here!`)
+	}))
+	defer empty.Close()
+	bad := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, fail.URL)
+	}))
+	defer bad.Close()
+	good := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, okay.URL)
+	}))
+	defer good.Close()
+
+	tests := map[string]struct {
+		url  string
+		fail bool
+	}{
+		"good":        {good.URL, false},
+		"failed send": {bad.URL, true},
+		"bad page":    {"destination", true},
+		"no endpoint": {empty.URL, true},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := send(src, tc.url)
+			if !tc.fail && got != nil {
+				t.Fatalf("want nil, got: %v", got)
+			}
+			if tc.fail && got == nil {
+				t.Fatalf("want error, got nil")
 			}
 		})
 	}
