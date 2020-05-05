@@ -33,7 +33,7 @@ func ping(hub string, feeds []string) {
 	data := url.Values{}
 	data.Set("hub.mode", "publish")
 	for _, feed := range feeds {
-		data.Set("hub.url[]", feed)
+		data.Add("hub.url[]", feed)
 	}
 
 	u, _ := url.ParseRequestURI(hub)

@@ -6,7 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
-- sending webmentions when endpoint not found
+- trying to send webmentions when endpoint not found
+- sending websub ping for multiple feeds at once
 
 ## [0.1.3] - 2019-04-02
 ### Fixed

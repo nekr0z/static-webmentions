@@ -16,6 +16,9 @@
 package main
 
 import (
+	"bytes"
+	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"testing"
 )
@@ -36,5 +39,32 @@ func TestFindFeeds(t *testing.T) {
 
 	if !stringSlicesEqual(want, got) {
 		t.Fatalf("want:\n%s\ngot:\n%s\n", want, got)
+	}
+}
+
+func TestPing(t *testing.T) {
+	buf := new(bytes.Buffer)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(200)
+		buf.ReadFrom(r.Body)
+	}))
+	defer ts.Close()
+
+	tests := map[string]struct {
+		feeds  []string
+		result string
+	}{
+		"empty":     {[]string{}, ""},
+		"non-empty": {[]string{"one", "two"}, "hub.mode=publish&hub.url%5B%5D=one&hub.url%5B%5D=two"},
+	}
+
+	for name, tc := range tests {
+		t.Run(name, func(t *testing.T) {
+			ping(ts.URL, tc.feeds)
+			got := buf.String()
+			if tc.result != got {
+				t.Fatalf("want %v, got: %v", tc.result, got)
+			}
+		})
 	}
 }
