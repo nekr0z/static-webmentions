@@ -124,7 +124,13 @@ func main() {
 
 func sendMentions(mentions []mention) {
 	for _, m := range mentions {
-		send(m.Source, m.Dest)
+		fmt.Printf("  %v ... ", m.Dest)
+		err := send(m.Source, m.Dest)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+		} else {
+			fmt.Printf("sent")
+		}
 	}
 }
 
@@ -216,22 +222,21 @@ func readConfig(path string) (config, error) {
 	return conf, err
 }
 
-func send(source, target string) {
+func send(source, target string) error {
 	client := webmention.New(nil)
 
-	fmt.Printf("  %v ... ", target)
 	endpoint, err := client.DiscoverEndpoint(target)
 	if err != nil {
-		fmt.Printf("%v", err)
+		return err
 	} else if endpoint == "" {
-		fmt.Println("no webmention support")
+		return fmt.Errorf("no webmention support")
 	}
 
 	_, err = client.SendWebmention(endpoint, source, target)
 	if err != nil {
-		fmt.Printf("%v", err)
+		return err
 	}
-	fmt.Println("sent")
+	return nil
 }
 
 func compareDirs(conf config) ([]string, error) {

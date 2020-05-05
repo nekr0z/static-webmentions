@@ -144,6 +144,15 @@ func TestThisPage(t *testing.T) {
 	}
 }
 
+func ExampleSendMentions() {
+	mentions := []mention{
+		{"this", "that"},
+	}
+
+	sendMentions(mentions)
+	// Output: that ... Get "that": unsupported protocol scheme ""
+}
+
 func stringSlicesEqual(a, b []string) bool {
 	if len(a) != len(b) {
 		return false
