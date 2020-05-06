@@ -129,7 +129,7 @@ func sendMentions(mentions []mention) {
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		} else {
-			fmt.Printf("sent")
+			fmt.Printf("sent\n")
 		}
 	}
 }
