@@ -30,25 +30,23 @@ func ping(hub string, feeds []string) {
 	if len(feeds) == 0 {
 		return
 	}
-	data := url.Values{}
-	data.Set("hub.mode", "publish")
-	for _, feed := range feeds {
-		data.Add("hub.url[]", feed)
-	}
 
 	u, _ := url.ParseRequestURI(hub)
 	urlStr := u.String()
 
-	client := &http.Client{}
-	r, _ := http.NewRequest("POST", urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
-	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-
-	fmt.Printf("pinging %s\n for:\n", hub)
 	for _, feed := range feeds {
-		fmt.Println(feed)
+		data := url.Values{}
+		data.Set("hub.mode", "publish")
+		data.Set("hub.url", feed)
+
+		client := &http.Client{}
+		r, _ := http.NewRequest("POST", urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
+		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+		fmt.Printf("pinging %s\n for: %s\n", hub, feed)
+		resp, _ := client.Do(r)
+		fmt.Println(resp.Status)
 	}
-	resp, _ := client.Do(r)
-	fmt.Println(resp.Status)
 }
 
 func findFeeds(conf config) []string {

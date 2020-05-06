@@ -55,7 +55,7 @@ func TestPing(t *testing.T) {
 		result string
 	}{
 		"empty":     {[]string{}, ""},
-		"non-empty": {[]string{"one", "two"}, "hub.mode=publish&hub.url%5B%5D=one&hub.url%5B%5D=two"},
+		"non-empty": {[]string{"one", "two"}, "hub.mode=publish&hub.url=onehub.mode=publish&hub.url=two"},
 	}
 
 	for name, tc := range tests {
