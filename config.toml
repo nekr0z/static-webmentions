@@ -19,4 +19,4 @@ excludeDestinations = [
 ]
 
 [params]
-websubHub = "https://pubsubhubbub.superfeedr.com/"   # if this is present, will look for changes in XML files and notify the hub
+websubHub = ["https://pubsubhubbub.superfeedr.com/","https://thehub.pubsub"]   # if this is present, will look for changes in XML files and notify the hub(s)

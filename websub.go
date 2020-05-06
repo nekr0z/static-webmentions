@@ -43,7 +43,7 @@ func ping(hub string, feeds []string) {
 		r, _ := http.NewRequest("POST", urlStr, strings.NewReader(data.Encode())) // URL-encoded payload
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-		fmt.Printf("pinging %s\n for: %s\n", hub, feed)
+		fmt.Printf("pinging %s for: %s ... ", hub, feed)
 		resp, _ := client.Do(r)
 		fmt.Println(resp.Status)
 	}

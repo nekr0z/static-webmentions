@@ -40,7 +40,7 @@ type config struct {
 	excludeSources      []string
 	excludeDestinations []string
 	storage             string
-	websubHub           string
+	websubHub           []string
 }
 
 type mention struct {
@@ -113,9 +113,11 @@ func main() {
 			fmt.Printf("%v\n", err)
 			os.Exit(1)
 		}
-		if cfg.websubHub != "" {
+		if len(cfg.websubHub) != 0 {
 			feeds := findFeeds(cfg)
-			ping(cfg.websubHub, feeds)
+			for _, hub := range cfg.websubHub {
+				ping(hub, feeds)
+			}
 		}
 		sendMentions(mentions)
 		fmt.Println("all sent")
@@ -201,7 +203,7 @@ func readConfig(path string) (config, error) {
 		WebmentionsFile     string
 	}
 	type params struct {
-		WebsubHub string
+		WebsubHub []string
 	}
 	type configuration struct {
 		BaseURL     string
