@@ -28,9 +28,11 @@ func TestFindFeeds(t *testing.T) {
 	cfg.baseURL = "https://my.site/"
 	cfg.oldDir = filepath.Join("testdata", "prod")
 	cfg.newDir = filepath.Join("testdata", "staging")
+	cfg.feedFiles = []string{"index.xml", "other.xml"}
 
 	want := []string{
 		"https://my.site/index.xml",
+		"https://my.site/other.xml",
 		"https://my.site/posts/index.xml",
 		"https://my.site/tags/b/index.xml",
 	}

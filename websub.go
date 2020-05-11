@@ -59,7 +59,7 @@ func findFeeds(conf config) []string {
 
 			relPath := strings.TrimPrefix(path, strings.TrimSuffix(conf.newDir, "/")+"/")
 
-			if !strings.HasSuffix(relPath, "index.xml") {
+			if !suffixInArray(relPath, conf.feedFiles) {
 				return nil
 			}
 
@@ -100,4 +100,13 @@ func feedChanged(newFile, oldFile string) bool {
 		return true
 	}
 	return !equal
+}
+
+func suffixInArray(s string, a []string) bool {
+	for _, e := range a {
+		if strings.HasSuffix(s, e) {
+			return true
+		}
+	}
+	return false
 }

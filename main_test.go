@@ -68,6 +68,7 @@ func TestCompareDirs(t *testing.T) {
 	}
 
 	want := []string{
+		"other.xml",
 		"posts/1/index.html",
 		"posts/2/index.html",
 		"posts/3/index.html",

@@ -41,6 +41,7 @@ type config struct {
 	excludeDestinations []string
 	storage             string
 	websubHub           []string
+	feedFiles           []string
 }
 
 type mention struct {
@@ -204,6 +205,7 @@ func readConfig(path string) (config, error) {
 	}
 	type params struct {
 		WebsubHub []string
+		FeedFiles []string
 	}
 	type configuration struct {
 		BaseURL     string
@@ -221,6 +223,11 @@ func readConfig(path string) (config, error) {
 	conf.excludeDestinations = cfg.Webmentions.ExcludeDestinations
 	conf.storage = cfg.Webmentions.WebmentionsFile
 	conf.websubHub = cfg.Params.WebsubHub
+	if len(cfg.Params.FeedFiles) == 0 {
+		conf.feedFiles = []string{"index.xml"}
+	} else {
+		conf.feedFiles = cfg.Params.FeedFiles
+	}
 	return conf, err
 }
 
