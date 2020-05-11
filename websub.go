@@ -44,8 +44,12 @@ func ping(hub string, feeds []string) {
 		r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 		fmt.Printf("pinging %s for: %s ... ", hub, feed)
-		resp, _ := client.Do(r)
-		fmt.Println(resp.Status)
+		resp, err := client.Do(r)
+		if err != nil {
+			fmt.Printf("error: %v", err)
+		} else {
+			fmt.Println(resp.Status)
+		}
 	}
 }
 
