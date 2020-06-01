@@ -407,6 +407,7 @@ func pathExcluded(path, ex string) bool {
 	case true:
 		return strings.HasPrefix(path, strings.TrimSuffix(strings.TrimPrefix(ex, "/"), "*"))
 	default:
+		path = "/" + path
 		ex = strings.TrimSuffix(ex, "index.html")
 		ex = strings.TrimSuffix(ex, "/") + "/index.html"
 		return path == ex

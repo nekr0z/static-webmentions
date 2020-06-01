@@ -8,7 +8,8 @@ webmentionsFile = "mentions.json"   # the file to store pending webmentions in
 ## pages that should not be considered as webmention sources
 excludeSources = [
   "/tags/*",                    # only trailing * are supported at the moment
-  "posts"                       # this only excludes /posts/index.html, not /posts/somepost/
+  "/posts",                     # this only excludes /posts/index.html, not /posts/somepost/
+  "/",                          # same as "/index.html"
 ]
 
 ## addresses that we don't want to send webmentions to
