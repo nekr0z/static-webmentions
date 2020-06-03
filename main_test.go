@@ -98,31 +98,6 @@ func TestExLink(t *testing.T) {
 	}
 }
 
-func TestFindGonePages(t *testing.T) {
-	tests := map[string]struct {
-		file string
-		path string
-		root string
-		want []string
-	}{
-		"reaction": {
-			file: `Redirect 410 "/reactions/2020/"`,
-			path: "some/path/reactions/2020/test2/.htaccess",
-			root: "some/path/",
-			want: []string{"reactions/2020/test2/index.html"},
-		},
-	}
-
-	for name, tc := range tests {
-		t.Run(name, func(t *testing.T) {
-			got := findGonePages([]byte(tc.file), tc.path, tc.root)
-			if !stringSlicesEqual(got, tc.want) {
-				t.Fatalf("want: %v, got: %v", tc.want, got)
-			}
-		})
-	}
-}
-
 func TestThisPage(t *testing.T) {
 	tests := map[string]struct {
 		path string

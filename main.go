@@ -263,12 +263,6 @@ func compareDirs(conf config) ([]string, error) {
 
 			relPath := strings.TrimPrefix(path, strings.TrimSuffix(conf.newDir, "/")+"/")
 
-			if strings.HasSuffix(relPath, ".htaccess") {
-				gone := findGone(path, filepath.Join(conf.oldDir, relPath), conf.excludeSources, conf.newDir)
-				changedFiles = append(changedFiles, gone...)
-				return nil
-			}
-
 			if pathIsExcluded(relPath, conf.excludeSources) {
 				return nil
 			}
@@ -289,75 +283,6 @@ func compareDirs(conf config) ([]string, error) {
 	}
 
 	return changedFiles, err
-}
-
-func findGone(newPath, oldPath string, exclude []string, root string) []string {
-	n, err := ioutil.ReadFile(newPath)
-	if err != nil {
-		return nil
-	}
-
-	gone := findGonePages(n, newPath, root)
-
-	o, err := ioutil.ReadFile(oldPath)
-	if err != nil {
-		return gone
-	}
-
-	old := findGonePages(o, newPath, root)
-
-	gone = subtractSlices(gone, old)
-
-	return gone
-}
-
-func findGonePages(b []byte, path, root string) []string {
-	var out []string
-	relPath := strings.TrimPrefix(path, root)
-	relPath = preSlash(relPath)
-	lines := strings.Split(string(b), "\n")
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		values := strings.Split(line, " ")
-		if len(values) != 3 {
-			continue
-		}
-		if values[0] != "Redirect" {
-			continue
-		}
-		if values[1] != "gone" && values[1] != "410" {
-			continue
-		}
-		value := strings.TrimSuffix(strings.TrimPrefix(values[2], "\""), "\"")
-		if strings.HasPrefix(relPath, value) {
-			value = strings.TrimSuffix(relPath, ".htaccess")
-		}
-		value = strings.TrimSuffix(strings.TrimPrefix(value, "/"), "/") + "/index.html"
-		out = append(out, value)
-	}
-	return out
-}
-
-func subtractSlices(full, part []string) []string {
-	var out []string
-
-	for _, vf := range full {
-		if inSlice(vf, part) {
-			continue
-		}
-		out = append(out, vf)
-	}
-
-	return out
-}
-
-func inSlice(value string, slice []string) bool {
-	for _, val := range slice {
-		if value == val {
-			return true
-		}
-	}
-	return false
 }
 
 func fileNotChanged(oldPath, newPath string) bool {
@@ -519,10 +444,6 @@ func eqUnescaped(source, ex string) bool {
 		return false
 	}
 	return us == ue
-}
-
-func preSlash(s string) string {
-	return "/" + strings.TrimPrefix(s, "/")
 }
 
 func postSlash(s string) string {

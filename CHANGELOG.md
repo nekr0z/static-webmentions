@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Breaking
 - require full path
+- don't bother with .htaccess, rely on tombstones instead
 
 ## [0.2.1] - 2019-05-11
 ### Added
