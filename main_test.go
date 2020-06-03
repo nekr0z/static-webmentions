@@ -23,6 +23,37 @@ import (
 	"testing"
 )
 
+func TestFindWork(t *testing.T) {
+	conf, err := readConfig("config.toml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	mm, err := findWork(conf)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var got []string
+	for _, m := range mm {
+		got = append(got, m.Dest)
+	}
+
+	want := []string{
+		"http://kuznetsov.md",
+		"https://my-awesome.site/testdata/page/",
+		"http://some.site/post/title",
+		"https://my-awesome.site/other/",
+		"https://my-awesome.site/testdata/page/",
+		"http://some.site/post/title",
+		"https://my-awesome.site/other/",
+	}
+
+	if !stringSlicesEqual(got, want) {
+		t.Fatalf("want: %v\ngot: %v", want, got)
+	}
+}
+
 func TestGetSources(t *testing.T) {
 	path := filepath.Join("testdata", "page", "index.html")
 	base := "https://my-awesome.site"

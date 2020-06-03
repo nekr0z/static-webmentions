@@ -19,6 +19,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -50,6 +51,8 @@ type mention struct {
 }
 
 var version string = "custom"
+
+var errPageDeleted = errors.New("410")
 
 func main() {
 	var configFile string
@@ -185,7 +188,14 @@ func findWork(cfg config) ([]mention, error) {
 		path := filepath.Join(cfg.newDir, file)
 		targets, err := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.newDir)
 		if err != nil {
-			return nil, err
+			if err == errPageDeleted {
+				targets, err = getSources(filepath.Join(cfg.oldDir, file), cfg.baseURL, cfg.excludeDestinations, cfg.oldDir)
+				if err != nil {
+					continue
+				}
+			} else {
+				return nil, err
+			}
 		}
 		for _, target := range targets {
 			m := mention{base + strings.TrimSuffix(file, "index.html"), target}
@@ -347,6 +357,14 @@ func getSources(path string, base string, exclude []string, relPath string) ([]s
 
 	defer f.Close()
 
+	if isDeleted(f) {
+		return nil, errPageDeleted
+	}
+	_, err = f.Seek(0, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	links, err := webmention.DiscoverLinksFromReader(f, postSlash(base), ".h-entry")
 	if err != nil {
 		return nil, nil
@@ -356,6 +374,27 @@ func getSources(path string, base string, exclude []string, relPath string) ([]s
 	links = cleanupSources(links, exclude)
 
 	return links, nil
+}
+
+func isDeleted(r io.Reader) bool {
+	doc, err := goquery.NewDocumentFromReader(r)
+	if err != nil {
+		return false
+	}
+
+	gone := false
+
+	doc.Find("meta").Each(func(_ int, s *goquery.Selection) {
+		if _, ok := s.Attr("http-equiv"); ok {
+			if v, ok := s.Attr("content"); ok {
+				if strings.HasPrefix(v, "410") {
+					gone = true
+				}
+			}
+		}
+	})
+
+	return gone
 }
 
 func thisPage(path, directory, base string) string {
