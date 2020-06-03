@@ -5,18 +5,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-### Breaking
-- require full path
-- don't bother with .htaccess, rely on tombstones instead
 
-## [0.2.1] - 2019-05-11
+## [0.3.0] - 2020-06-03
+### Breaking
+- require full path for exclusions in config
+- don't bother with .htaccess, rely on tombstones instead for detecting gone pages
+
+### Fixed
+- actually re-send webmentions for gone pages
+- detect un-gone pages
+
+## [0.2.1] - 2020-05-11
 ### Added
 - support non-standart feed filenames
 
 ### Fixed
 - websub pinger would panic on response error
 
-## [0.2.0] - 2019-05-06
+## [0.2.0] - 2020-05-06
 ### Added
 - support for multiple WebSub hubs
 
@@ -24,22 +30,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - trying to send webmentions when endpoint not found
 - sending websub ping for multiple feeds at once
 
-## [0.1.3] - 2019-04-02
+## [0.1.3] - 2020-04-02
 ### Fixed
 - links with fragments were not excluded
 
-## [0.1.2] - 2019-04-01
+## [0.1.2] - 2020-04-01
 ### Added
 - finding XML feeds and pinging WebSub hub on changes
 
-## [0.1.1] - 2019-03-29
+## [0.1.1] - 2020-03-29
 ### Fixed
 - errors if symlinks to directories are present
 
 ## 0.1.0 - 2020-03-29
 *initial release*
 
-[Unreleased]: https://github.com/nekr0z/static-webmentions/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/nekr0z/static-webmentions/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/nekr0z/static-webmentions/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/nekr0z/static-webmentions/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/nekr0z/static-webmentions/compare/v0.1.3...v0.2.0
 [0.1.3]: https://github.com/nekr0z/static-webmentions/compare/v0.1.2...v0.1.3
