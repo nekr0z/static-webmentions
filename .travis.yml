@@ -15,8 +15,6 @@ before_install:
 before_script:
 
 script:
-  - go vet ./...
-  - go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
   - go build
 
 before_deploy:
@@ -38,7 +36,6 @@ cache:
     - $HOME/gopath/pkg/mod
 
 after_success:
-  - bash <(curl -s https://codecov.io/bash)
 
 branches:
   except:
