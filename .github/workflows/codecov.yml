@@ -28,4 +28,4 @@ jobs:
         run: |
           go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
       - name: upload coverage report
-        uses: codecov/codecov-action@v2.0.1
+        uses: codecov/codecov-action@v2.0.2
