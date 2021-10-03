@@ -1,0 +1,27 @@
+name: release
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+
+      - name: build packages
+        run: |
+          mkdir release
+          bash <(VER=$(go generate); for ARCH in amd64 386 arm arm64; do GOARCH=$ARCH go build -ldflags "-X main.version=$VER"; tar -czf release/static-webmentions-$VER-linux-$ARCH.tar.gz static-webmentions LICENSE README.md CHANGELOG.md; done)
+      - name: release
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          files: "release/*"

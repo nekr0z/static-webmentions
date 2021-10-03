@@ -1,0 +1,43 @@
+name: build
+on:
+  push:
+    branches:
+      - "master"
+    tags-ignore:
+      - "*"
+
+jobs:
+  pre_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.15
+      - name: cache
+        uses: actions/cache@v2.1.6
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: |
+            ${{ runner.os }}-build-${{ hashFiles('**/go.mod') }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ hashFiles('**/go.mod') }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: build packages
+        run: |
+          mkdir release
+          bash <(VER=$(go generate); for ARCH in amd64 386 arm arm64; do GOARCH=$ARCH go build -ldflags "-X main.version=$VER"; tar -czf release/static-webmentions-$VER-linux-$ARCH.tar.gz static-webmentions LICENSE README.md CHANGELOG.md; done)
+      - name: release
+        uses: marvinpinto/action-automatic-releases@v1.2.1
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "latest"
+          prerelease: true
+          title: "Development Build"
+          files: "release/*"
