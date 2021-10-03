@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - webmentions not re-sent for the links that were removed from a page
 
+### Changed
+- bumped Go to 1.15
+
 ## [0.3.2] - 2020-10-30
 - maintenance release, updated dependencies
 
@@ -54,12 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.1.0 - 2020-03-29
 *initial release*
 
-[Unreleased]: https://github.com/nekr0z/static-webmentions/compare/v0.3.2...HEAD
-[0.3.2]: https://github.com/nekr0z/static-webmentions/compare/v0.3.1...v0.3.2
-[0.3.1]: https://github.com/nekr0z/static-webmentions/compare/v0.3.0...v0.3.1
-[0.3.0]: https://github.com/nekr0z/static-webmentions/compare/v0.2.1...v0.3.0
-[0.2.1]: https://github.com/nekr0z/static-webmentions/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/nekr0z/static-webmentions/compare/v0.1.3...v0.2.0
-[0.1.3]: https://github.com/nekr0z/static-webmentions/compare/v0.1.2...v0.1.3
-[0.1.2]: https://github.com/nekr0z/static-webmentions/compare/v0.1.1...v0.1.2
-[0.1.1]: https://github.com/nekr0z/static-webmentions/compare/v0.1.0...v0.1.1
+[Unreleased]: (https://github.com/nekr0z/static-webmentions/compare/v0.3.2...HEAD)
+[0.3.2]: (https://github.com/nekr0z/static-webmentions/compare/v0.3.1...v0.3.2)
+[0.3.1]: (https://github.com/nekr0z/static-webmentions/compare/v0.3.0...v0.3.1)
+[0.3.0]: (https://github.com/nekr0z/static-webmentions/compare/v0.2.1...v0.3.0)
+[0.2.1]: (https://github.com/nekr0z/static-webmentions/compare/v0.2.0...v0.2.1)
+[0.2.0]: (https://github.com/nekr0z/static-webmentions/compare/v0.1.3...v0.2.0)
+[0.1.3]: (https://github.com/nekr0z/static-webmentions/compare/v0.1.2...v0.1.3)
+[0.1.2]: (https://github.com/nekr0z/static-webmentions/compare/v0.1.1...v0.1.2)
+[0.1.1]: (https://github.com/nekr0z/static-webmentions/compare/v0.1.0...v0.1.1)
