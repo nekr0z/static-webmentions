@@ -47,6 +47,7 @@ func TestFindWork(t *testing.T) {
 		"https://my-awesome.site/testdata/page/",
 		"http://some.site/post/title",
 		"https://my-awesome.site/other/",
+		"http://example.site/post",
 	}
 
 	if !stringSlicesEqual(got, want) {
@@ -103,6 +104,7 @@ func TestCompareDirs(t *testing.T) {
 		"posts/1/index.html",
 		"posts/2/index.html",
 		"posts/3/index.html",
+		"posts/4/index.html",
 	}
 
 	if !stringSlicesEqual(got, want) {
