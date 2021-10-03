@@ -185,7 +185,9 @@ func findWork(cfg config) ([]mention, error) {
 	var mentions []mention
 
 	for _, file := range files {
-		path := filepath.Join(cfg.newDir, file)
+		path := filepath.Join(cfg.oldDir, file)
+		oldtargets, _ := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.oldDir)
+		path = filepath.Join(cfg.newDir, file)
 		targets, err := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.newDir)
 		if err != nil {
 			if err == errPageDeleted {
@@ -197,6 +199,7 @@ func findWork(cfg config) ([]mention, error) {
 				return nil, err
 			}
 		}
+		targets = appendDedupe(targets, oldtargets...)
 		for _, target := range targets {
 			m := mention{base + strings.TrimSuffix(file, "index.html"), target}
 			mentions = append(mentions, m)
@@ -487,4 +490,18 @@ func eqUnescaped(source, ex string) bool {
 
 func postSlash(s string) string {
 	return strings.TrimSuffix(s, "/") + "/"
+}
+
+func appendDedupe(a []string, b ...string) (out []string) {
+	a = append(a, b...)
+lp:
+	for _, s := range a {
+		for _, str := range out {
+			if eqUnescaped(s, str) {
+				continue lp
+			}
+		}
+		out = append(out, s)
+	}
+	return
 }
