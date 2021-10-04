@@ -41,6 +41,7 @@ type config struct {
 	alsoWatch           []string
 	excludeSources      []string
 	excludeDestinations []string
+	excludeSelectors    []string
 	storage             string
 	websubHub           []string
 	feedFiles           []string
@@ -187,12 +188,12 @@ func findWork(cfg config) ([]mention, error) {
 
 	for _, file := range files {
 		path := filepath.Join(cfg.oldDir, file)
-		oldtargets, _ := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.oldDir)
+		oldtargets, _ := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
 		path = filepath.Join(cfg.newDir, file)
-		targets, err := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.newDir)
+		targets, err := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.newDir)
 		if err != nil {
 			if err == errPageDeleted {
-				targets, err = getSources(filepath.Join(cfg.oldDir, file), cfg.baseURL, cfg.excludeDestinations, cfg.oldDir)
+				targets, err = getSources(filepath.Join(cfg.oldDir, file), cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
 				if err != nil {
 					continue
 				}
@@ -216,6 +217,7 @@ func readConfig(path string) (config, error) {
 		AlsoWatch           []string
 		ExcludeSources      []string
 		ExcludeDestinations []string
+		ExcludeSelectors    []string
 		WebmentionsFile     string
 	}
 	type params struct {
@@ -237,6 +239,7 @@ func readConfig(path string) (config, error) {
 	conf.alsoWatch = cfg.Webmentions.AlsoWatch
 	conf.excludeSources = cfg.Webmentions.ExcludeSources
 	conf.excludeDestinations = cfg.Webmentions.ExcludeDestinations
+	conf.excludeSelectors = cfg.Webmentions.ExcludeSelectors
 	conf.storage = cfg.Webmentions.WebmentionsFile
 	conf.websubHub = cfg.Params.WebsubHub
 	if len(cfg.Params.FeedFiles) == 0 {
@@ -314,13 +317,15 @@ func fileNotChanged(oldPath, newPath string, addSel []string) bool {
 	}
 	defer nf.Close()
 
-	o, _ := extractEntry(of, addSel)
-	n, _ := extractEntry(nf, addSel)
+	o, _ := extractEntryAndSel(of, addSel)
+	n, _ := extractEntryAndSel(nf, addSel)
 
 	return o == n
 }
 
-func extractEntry(r io.Reader, as []string) (string, error) {
+// extractEntryAndSel returns the HTML representation of the first h-entry found in `r`,
+// along with anything matching the additional CSS selectors `as`
+func extractEntryAndSel(r io.Reader, as []string) (string, error) {
 	doc, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
 		return "", err
@@ -364,7 +369,7 @@ func pathExcluded(path, ex string) bool {
 	}
 }
 
-func getSources(path string, base string, exclude []string, relPath string) ([]string, error) {
+func getSources(path string, base string, exclude []string, excludeCSS []string, relPath string) ([]string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
@@ -380,7 +385,31 @@ func getSources(path string, base string, exclude []string, relPath string) ([]s
 		return nil, err
 	}
 
-	links, err := webmention.DiscoverLinksFromReader(f, postSlash(base), ".h-entry")
+	d, err := goquery.NewDocumentFromReader(f)
+	if err != nil {
+		return nil, nil
+	}
+
+	s := d.Find(".h-entry")
+
+	h, err := s.Html()
+	if err != nil {
+		return nil, err
+	}
+
+	// this is ugly, but I can't figure out how to do it with goquery
+	for _, ex := range excludeCSS {
+		exc, err := s.Find(ex).Html()
+		if err != nil {
+			return nil, err
+		}
+		if exc == "" {
+			continue
+		}
+		h = strings.ReplaceAll(h, exc, "\n")
+	}
+
+	links, err := webmention.DiscoverLinksFromReader(strings.NewReader(h), postSlash(base), "")
 	if err != nil {
 		return nil, nil
 	}

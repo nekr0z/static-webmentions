@@ -26,6 +26,11 @@ excludeDestinations = [
   "/tags"                       # relative paths for our own site include all the pages under that directory
 ]
 
+## CSS selectors that we don't want to look into for webmention targets
+excludeSelectors = [
+  "#comments",
+]
+
 [params]
 websubHub = ["https://pubsubhubbub.superfeedr.com/","https://thehub.pubsub"]   # if this is present, will look for changes in XML files and notify the hub(s)
 feedFiles = ["index.xml", "other.xml"]

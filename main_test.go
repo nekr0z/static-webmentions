@@ -40,6 +40,7 @@ func TestFindWork(t *testing.T) {
 	}
 
 	want := []string{
+		"http://resend.me",
 		"http://kuznetsov.md",
 		"https://my-awesome.site/testdata/page/",
 		"http://some.site/post/title",
@@ -58,7 +59,7 @@ func TestFindWork(t *testing.T) {
 func TestGetSources(t *testing.T) {
 	path := filepath.Join("testdata", "page", "index.html")
 	base := "https://my-awesome.site"
-	got, err := getSources(path, base, []string{base, "mailto:", "/tags"}, "")
+	got, err := getSources(path, base, []string{base, "mailto:", "/tags"}, []string{}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -75,7 +76,7 @@ func TestGetSources(t *testing.T) {
 
 func TestGetSourcesError(t *testing.T) {
 	path := filepath.Join("testdata", "page", "page")
-	gotL, gotE := getSources(path, "", []string{}, "")
+	gotL, gotE := getSources(path, "", []string{}, []string{}, "")
 	var wantL []string
 	var wantE error
 	wantL = nil
@@ -101,6 +102,7 @@ func TestCompareDirs(t *testing.T) {
 
 	want := []string{
 		"extra_tag.html",
+		"ignored_css.html",
 		"other.xml",
 		"posts/1/index.html",
 		"posts/2/index.html",
