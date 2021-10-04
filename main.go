@@ -38,6 +38,7 @@ type config struct {
 	baseURL             string
 	newDir              string
 	oldDir              string
+	alsoWatch           []string
 	excludeSources      []string
 	excludeDestinations []string
 	storage             string
@@ -212,6 +213,7 @@ func readConfig(path string) (config, error) {
 	type webm struct {
 		NewDir              string
 		OldDir              string
+		AlsoWatch           []string
 		ExcludeSources      []string
 		ExcludeDestinations []string
 		WebmentionsFile     string
@@ -232,6 +234,7 @@ func readConfig(path string) (config, error) {
 	conf.baseURL = cfg.BaseURL
 	conf.newDir = cfg.Webmentions.NewDir
 	conf.oldDir = cfg.Webmentions.OldDir
+	conf.alsoWatch = cfg.Webmentions.AlsoWatch
 	conf.excludeSources = cfg.Webmentions.ExcludeSources
 	conf.excludeDestinations = cfg.Webmentions.ExcludeDestinations
 	conf.storage = cfg.Webmentions.WebmentionsFile
@@ -284,7 +287,7 @@ func compareDirs(conf config) ([]string, error) {
 				return nil
 			}
 
-			if fileNotChanged(path, filepath.Join(conf.oldDir, relPath)) {
+			if fileNotChanged(path, filepath.Join(conf.oldDir, relPath), conf.alsoWatch) {
 				return nil
 			}
 
@@ -298,7 +301,7 @@ func compareDirs(conf config) ([]string, error) {
 	return changedFiles, err
 }
 
-func fileNotChanged(oldPath, newPath string) bool {
+func fileNotChanged(oldPath, newPath string, addSel []string) bool {
 	of, err := os.Open(oldPath)
 	if err != nil {
 		return true
@@ -311,13 +314,13 @@ func fileNotChanged(oldPath, newPath string) bool {
 	}
 	defer nf.Close()
 
-	o, _ := extractEntry(of)
-	n, _ := extractEntry(nf)
+	o, _ := extractEntry(of, addSel)
+	n, _ := extractEntry(nf, addSel)
 
 	return o == n
 }
 
-func extractEntry(r io.Reader) (string, error) {
+func extractEntry(r io.Reader, as []string) (string, error) {
 	doc, err := goquery.NewDocumentFromReader(r)
 	if err != nil {
 		return "", err
@@ -327,6 +330,15 @@ func extractEntry(r io.Reader) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	s := strings.Join(as, ", ")
+	doc.Find(s).Each(func(_ int, sel *goquery.Selection) {
+		h, err := sel.Html()
+		if err != nil {
+			return
+		}
+		out = fmt.Sprintf("%s\n%s", out, h)
+	})
 
 	return out, nil
 }

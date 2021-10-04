@@ -4,6 +4,13 @@ baseurl = "https://my-awesome.site"
 newDir = "testdata/staging"         # the directory where newly created site is
 oldDir = "testdata/prod/"           # the directory where old (or current) site is
 webmentionsFile = "mentions.json"   # the file to store pending webmentions in
+
+## by default, only the `h-entry` is checked for changes; you can add other parts of a page here
+## using CSS selectors
+alsoWatch = [
+  "#webmentions",
+  ".comments",
+]
   
 ## pages that should not be considered as webmention sources
 excludeSources = [
