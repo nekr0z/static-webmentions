@@ -35,6 +35,8 @@ If your publishing process is set up so that at the moment when you have the two
 static-webmentions
 ```
 
+`static-webmention` will detect new and changed pages, and send webmentions as appropriate. To have deleted pages processed correctly, the new state of the site should have [tombstones](https://indieweb.org/tombstone) containing a `<meta http-equiv="Status" content="410 Gone" />` tag in place of the removed pages. 
+
 ### Configuration
 `static-webmentions` will look for a config file (`config.toml` in current directory by default). An example config file with all the supported options is [included](config.toml), all the options are fairly self-explanatory. [Hugo](https://gohugo.in) users may want to use the same `config.toml` that they store their website configuration in.
 
