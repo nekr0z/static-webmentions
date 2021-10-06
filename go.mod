@@ -9,5 +9,5 @@ require (
 	github.com/udhos/equalfile v0.3.0
 	golang.org/x/net v0.0.0-20211005215030-d2e5035098b3 // indirect
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
-	willnorris.com/go/webmention v0.0.0-20211005182431-731d7b2b3957
+	willnorris.com/go/webmention v0.0.0-20211006131344-6ad7c6bccd2e
 )

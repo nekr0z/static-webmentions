@@ -30,3 +30,5 @@ willnorris.com/go/webmention v0.0.0-20200623235404-057ea514ab98 h1:06Zf8bMVQ+OBH
 willnorris.com/go/webmention v0.0.0-20200623235404-057ea514ab98/go.mod h1:p+ZRAsZS2pzZ6kX3GKWYurf3WZI2ygj7VbR8NM8qwfM=
 willnorris.com/go/webmention v0.0.0-20211005182431-731d7b2b3957 h1:k2vkL+9zOnrQlPFqdteL+AFAyRaGghFzYojeiu4TyKs=
 willnorris.com/go/webmention v0.0.0-20211005182431-731d7b2b3957/go.mod h1:p+ZRAsZS2pzZ6kX3GKWYurf3WZI2ygj7VbR8NM8qwfM=
+willnorris.com/go/webmention v0.0.0-20211006131344-6ad7c6bccd2e h1:VZW8MSh6LiAjYZotIDB8PrQFbYQB7xU6fFHLNOhH4KI=
+willnorris.com/go/webmention v0.0.0-20211006131344-6ad7c6bccd2e/go.mod h1:p+ZRAsZS2pzZ6kX3GKWYurf3WZI2ygj7VbR8NM8qwfM=
