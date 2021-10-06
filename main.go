@@ -28,6 +28,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/BurntSushi/toml"
 	"github.com/PuerkitoBio/goquery"
@@ -45,6 +46,7 @@ type config struct {
 	storage             string
 	websubHub           []string
 	feedFiles           []string
+	concurFiles         int
 }
 
 type mention struct {
@@ -184,30 +186,58 @@ func findWork(cfg config) ([]mention, error) {
 	}
 
 	base := postSlash(cfg.baseURL)
-	var mentions []mention
+	var mentions struct {
+		mu sync.Mutex
+		mm []mention
+	}
+
+	cc := make(chan struct{}, cfg.concurFiles)
+	wgDone := make(chan bool)
+	errors := make(chan error)
+	var wg sync.WaitGroup
 
 	for _, file := range files {
-		path := filepath.Join(cfg.oldDir, file)
-		oldtargets, _ := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
-		path = filepath.Join(cfg.newDir, file)
-		targets, err := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.newDir)
-		if err != nil {
-			if err == errPageDeleted {
-				targets, err = getSources(filepath.Join(cfg.oldDir, file), cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
-				if err != nil {
-					continue
+		wg.Add(1)
+		cc <- struct{}{}
+
+		go func(file string) {
+			defer wg.Done()
+			defer func() { <-cc }()
+			path := filepath.Join(cfg.oldDir, file)
+			oldtargets, _ := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
+			path = filepath.Join(cfg.newDir, file)
+			targets, err := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.newDir)
+			if err != nil {
+				if err == errPageDeleted {
+					targets, err = getSources(filepath.Join(cfg.oldDir, file), cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
+					if err != nil {
+						return
+					}
+				} else {
+					errors <- err
+					return
 				}
-			} else {
-				return nil, err
 			}
-		}
-		targets = appendDedupe(targets, oldtargets...)
-		for _, target := range targets {
-			m := mention{base + strings.TrimSuffix(file, "index.html"), target}
-			mentions = append(mentions, m)
-		}
+			targets = appendDedupe(targets, oldtargets...)
+			for _, target := range targets {
+				m := mention{base + strings.TrimSuffix(file, "index.html"), target}
+				mentions.mu.Lock()
+				mentions.mm = append(mentions.mm, m)
+				mentions.mu.Unlock()
+			}
+		}(file)
 	}
-	return mentions, nil
+	go func() {
+		wg.Wait()
+		close(wgDone)
+	}()
+	select {
+	case <-wgDone:
+		break
+	case err := <-errors:
+		return nil, err
+	}
+	return mentions.mm, nil
 }
 
 func readConfig(path string) (config, error) {
@@ -219,6 +249,7 @@ func readConfig(path string) (config, error) {
 		ExcludeDestinations []string
 		ExcludeSelectors    []string
 		WebmentionsFile     string
+		ConcurrentFiles     int
 	}
 	type params struct {
 		WebsubHub []string
@@ -242,6 +273,10 @@ func readConfig(path string) (config, error) {
 	conf.excludeSelectors = cfg.Webmentions.ExcludeSelectors
 	conf.storage = cfg.Webmentions.WebmentionsFile
 	conf.websubHub = cfg.Params.WebsubHub
+	conf.concurFiles = cfg.Webmentions.ConcurrentFiles - 1
+	if conf.concurFiles < 0 {
+		conf.concurFiles = 0
+	}
 	if len(cfg.Params.FeedFiles) == 0 {
 		conf.feedFiles = []string{"index.xml"}
 	} else {
