@@ -192,10 +192,10 @@ func TestSend(t *testing.T) {
 		url  string
 		want string
 	}{
-		"good":        {good.URL, "sent\n"},
-		"failed send": {bad.URL, "response error: 400\n"},
-		"bad page":    {"destination", "Get \"destination\": unsupported protocol scheme \"\"\n"},
-		"no endpoint": {empty.URL, "no webmention rel found\n"},
+		"good":        {good.URL, "webmention for " + good.URL + " sent"},
+		"failed send": {bad.URL, "could not send webmention for " + bad.URL + ": response error: 400"},
+		"bad page":    {"destination", "could not discover endpoint for destination: Get \"destination\": unsupported protocol scheme \"\""},
+		"no endpoint": {empty.URL, "could not discover endpoint for " + empty.URL + ": no webmention rel found"},
 	}
 
 	rescueStdout := os.Stdout
@@ -210,7 +210,7 @@ func TestSend(t *testing.T) {
 			send(src, tc.url, &wg, sc, 15)
 			w.Close()
 			out, _ := ioutil.ReadAll(r)
-			got := strings.SplitAfterN(string(out), " ... ", 2)[1]
+			got := strings.Split(string(out), "\n")[1]
 			if tc.want != got {
 				t.Fatalf("\nwant %q,\ngot: %q", tc.want, got)
 			}

@@ -301,18 +301,18 @@ func send(source, target string, wg *sync.WaitGroup, sc map[string]chan struct{}
 	}
 	sc[u.Host] <- struct{}{}
 
-	fmt.Printf("  %v ... ", target)
+	fmt.Printf("processing webmention for %v ...\n", target)
 	client := webmention.New(nil)
 
 	endpoint, err := client.DiscoverEndpoint(target)
 	<-sc[u.Host]
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("could not discover endpoint for %v: %v\n", target, err)
 		return
 	}
 	u, err = url.Parse(endpoint)
 	if err != nil {
-		fmt.Printf("  enpoint %v doesn't look like a parsable URL\n", endpoint)
+		fmt.Printf("%v: discovered enpoint (%v) doesn't look like a parsable URL\n", target, endpoint)
 		return
 	}
 	if _, ok := sc[u.Host]; !ok {
@@ -323,10 +323,10 @@ func send(source, target string, wg *sync.WaitGroup, sc map[string]chan struct{}
 
 	_, err = client.SendWebmention(endpoint, source, target)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("could not send webmention for %v: %v\n", target, err)
 		return
 	}
-	fmt.Println("sent")
+	fmt.Printf("webmention for %v sent\n", target)
 }
 
 func compareDirs(conf config) ([]string, error) {
