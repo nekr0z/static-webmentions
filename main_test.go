@@ -17,9 +17,13 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
+	"strings"
+	"sync"
 	"testing"
 )
 
@@ -186,22 +190,29 @@ func TestSend(t *testing.T) {
 
 	tests := map[string]struct {
 		url  string
-		fail bool
+		want string
 	}{
-		"good":        {good.URL, false},
-		"failed send": {bad.URL, true},
-		"bad page":    {"destination", true},
-		"no endpoint": {empty.URL, true},
+		"good":        {good.URL, "sent\n"},
+		"failed send": {bad.URL, "response error: 400\n"},
+		"bad page":    {"destination", "Get \"destination\": unsupported protocol scheme \"\"\n"},
+		"no endpoint": {empty.URL, "no webmention rel found\n"},
 	}
 
+	rescueStdout := os.Stdout
+	defer func() { os.Stdout = rescueStdout }()
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			got := send(src, tc.url)
-			if !tc.fail && got != nil {
-				t.Fatalf("want nil, got: %v", got)
-			}
-			if tc.fail && got == nil {
-				t.Fatalf("want error, got nil")
+			r, w, _ := os.Pipe()
+			os.Stdout = w
+			var wg sync.WaitGroup
+			wg.Add(1)
+			sc := make(map[string]chan struct{})
+			send(src, tc.url, &wg, sc, 15)
+			w.Close()
+			out, _ := ioutil.ReadAll(r)
+			got := strings.SplitAfterN(string(out), " ... ", 2)[1]
+			if tc.want != got {
+				t.Fatalf("\nwant %q,\ngot: %q", tc.want, got)
 			}
 		})
 	}

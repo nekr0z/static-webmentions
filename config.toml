@@ -6,6 +6,7 @@ oldDir = "testdata/prod/"           # the directory where old (or current) site 
 webmentionsFile = "mentions.json"   # the file to store pending webmentions in
 
 concurrentFiles = 2		# number of files to process simultaneously, defaults to 1
+concurrentRequests = 5		# number of requests that can be simultaneously sent to the same host when sending webmentions
 
 ## by default, only the `h-entry` is checked for changes; you can add other parts of a page here
 ## using CSS selectors

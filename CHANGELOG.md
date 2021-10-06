@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Pre-release]
 ### Added
 - an option to process files concurrently
+- an option to send webmentions concurrently
 
 ### Fixed
 - not processing empty line as a valid endpoint address

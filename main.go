@@ -47,6 +47,7 @@ type config struct {
 	websubHub           []string
 	feedFiles           []string
 	concurFiles         int
+	concurReqs          int
 }
 
 type mention struct {
@@ -113,7 +114,7 @@ func main() {
 			fmt.Printf("%v\n", err)
 			os.Exit(1)
 		}
-		sendMentions(mentions)
+		sendMentions(mentions, cfg.concurReqs)
 		fmt.Println("all sent")
 	default:
 		mentions, err := findWork(cfg)
@@ -127,21 +128,19 @@ func main() {
 				ping(hub, feeds)
 			}
 		}
-		sendMentions(mentions)
+		sendMentions(mentions, cfg.concurReqs)
 		fmt.Println("all sent")
 	}
 }
 
-func sendMentions(mentions []mention) {
+func sendMentions(mentions []mention, smax int) {
+	sc := make(map[string]chan struct{})
+	var wg sync.WaitGroup
 	for _, m := range mentions {
-		fmt.Printf("  %v ... ", m.Dest)
-		err := send(m.Source, m.Dest)
-		if err != nil {
-			fmt.Printf("%v\n", err)
-		} else {
-			fmt.Printf("sent\n")
-		}
+		wg.Add(1)
+		go send(m.Source, m.Dest, &wg, sc, smax)
 	}
+	wg.Wait()
 }
 
 func dump(mentions []mention, file string) error {
@@ -250,6 +249,7 @@ func readConfig(path string) (config, error) {
 		ExcludeSelectors    []string
 		WebmentionsFile     string
 		ConcurrentFiles     int
+		ConcurrentRequests  int
 	}
 	type params struct {
 		WebsubHub []string
@@ -277,6 +277,10 @@ func readConfig(path string) (config, error) {
 	if conf.concurFiles < 0 {
 		conf.concurFiles = 0
 	}
+	conf.concurReqs = cfg.Webmentions.ConcurrentRequests - 1
+	if conf.concurReqs < 0 {
+		conf.concurReqs = 0
+	}
 	if len(cfg.Params.FeedFiles) == 0 {
 		conf.feedFiles = []string{"index.xml"}
 	} else {
@@ -285,21 +289,44 @@ func readConfig(path string) (config, error) {
 	return conf, err
 }
 
-func send(source, target string) error {
+func send(source, target string, wg *sync.WaitGroup, sc map[string]chan struct{}, smax int) {
+	defer wg.Done()
+	u, err := url.Parse(target)
+	if err != nil {
+		fmt.Printf("  %v doesn't look like a parsable URL\n", target)
+		return
+	}
+	if _, ok := sc[u.Host]; !ok {
+		sc[u.Host] = make(chan struct{}, smax)
+	}
+	sc[u.Host] <- struct{}{}
+
+	fmt.Printf("  %v ... ", target)
 	client := webmention.New(nil)
 
 	endpoint, err := client.DiscoverEndpoint(target)
+	<-sc[u.Host]
 	if err != nil {
-		return err
-	} else if endpoint == "" {
-		return fmt.Errorf("no webmention support")
+		fmt.Println(err)
+		return
 	}
+	u, err = url.Parse(endpoint)
+	if err != nil {
+		fmt.Printf("  enpoint %v doesn't look like a parsable URL\n", endpoint)
+		return
+	}
+	if _, ok := sc[u.Host]; !ok {
+		sc[u.Host] = make(chan struct{}, smax)
+	}
+	sc[u.Host] <- struct{}{}
+	defer func() { <-sc[u.Host] }()
 
 	_, err = client.SendWebmention(endpoint, source, target)
 	if err != nil {
-		return err
+		fmt.Println(err)
+		return
 	}
-	return nil
+	fmt.Println("sent")
 }
 
 func compareDirs(conf config) ([]string, error) {
