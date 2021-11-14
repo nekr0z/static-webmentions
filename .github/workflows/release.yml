@@ -50,5 +50,5 @@ jobs:
         with:
           host: evgkuz.org
           username: evgeny
-          key: ${{ secrets.KEY }}
+          key: ${{ secrets.SSH_KEY }}
           script: static-webmentions
