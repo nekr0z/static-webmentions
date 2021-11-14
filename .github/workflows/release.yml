@@ -44,3 +44,11 @@ jobs:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: "release/*"
+
+      - name: trigger repository update
+        uses: appleboy/ssh-action@v0.1.4
+        with:
+          host: evgkuz.org
+          username: evgeny
+          key: ${{ secrets.KEY }}
+          script: static-webmentions
