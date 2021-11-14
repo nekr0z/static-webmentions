@@ -39,7 +39,7 @@ jobs:
           fpm -s deb -t deb -a armel *arm.deb
           rm *arm.deb
       - name: release
-        uses: softprops/action-gh-release@v1
+        uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
