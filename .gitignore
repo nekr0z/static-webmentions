@@ -1,3 +1,4 @@
 .*.swp
 /static-webmentions
 /release/
+/debian.changelog

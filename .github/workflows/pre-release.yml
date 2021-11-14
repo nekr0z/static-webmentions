@@ -29,10 +29,24 @@ jobs:
             ${{ runner.os }}-build-
             ${{ runner.os }}-
 
+      - name: install nekr0z/changelog
+        run: |
+          go get github.com/nekr0z/changelog
+          go install github.com/nekr0z/changelog/cmd/changelog
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.7
+          bundler-cache: true
+
+      - name: install fpm
+        run: gem install fpm
+
       - name: build packages
         run: |
           mkdir release
-          bash <(VER=$(go generate); for ARCH in amd64 386 arm arm64; do GOARCH=$ARCH go build -ldflags "-X main.version=$VER"; tar -czf release/static-webmentions-$VER-linux-$ARCH.tar.gz static-webmentions LICENSE README.md CHANGELOG.md; done)
+          changelog -n "Evgeny Kuznetsov" -e "evgeny@kuznetsov.md" -p "static-webmentions"
+          bash <(VER=$(go generate); for ARCH in amd64 386 arm arm64; do GOARCH=$ARCH go build -ldflags "-X main.version=$VER"; tar -czf release/static-webmentions-$VER-linux-$ARCH.tar.gz static-webmentions LICENSE README.md CHANGELOG.md SOURCE.txt; fpm -t deb -s dir -a $ARCH -n static-webmentions -v $VER -m "Evgeny Kuznetsov <evgeny@kuznetsov.md>" --deb-changelog debian.changelog --license GPL-3 --deb-priority optional --url https://github.com/nekr0z/static-webmentions --category net --vendor "Evgeny Kuznetsov <evgeny@kuznetsov.md>" LICENSE=/usr/share/doc/static-webmentions/ README.md=/usr/share/doc/static-webmentions/ SOURCE.txt=/usr/share/doc/static-webmentions static-webmentions=/usr/bin/; mv *.deb release/; done)
       - name: release
         uses: marvinpinto/action-automatic-releases@v1.2.1
         with:
