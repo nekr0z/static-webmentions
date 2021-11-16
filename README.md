@@ -1,7 +1,7 @@
 # static-webmentions
 a tool to send webmentions from a static website
 
-[![Build Status](https://github.com/nekr0z/static-webmentions/actions/workflows/pre-release.yml/badge.svg)](https://travis-ci.org/nekr0z/static-webmentions) [![codecov](https://codecov.io/gh/nekr0z/static-webmentions/branch/master/graph/badge.svg)](https://codecov.io/gh/nekr0z/static-webmentions) [![Go Report Card](https://goreportcard.com/badge/github.com/nekr0z/static-webmentions)](https://goreportcard.com/report/github.com/nekr0z/static-webmentions)
+[![Build Status](https://github.com/nekr0z/static-webmentions/actions/workflows/pre-release.yml/badge.svg)](https://github.com/nekr0z/static-webmentions/releases/tag/latest) [![codecov](https://codecov.io/gh/nekr0z/static-webmentions/branch/master/graph/badge.svg)](https://codecov.io/gh/nekr0z/static-webmentions) [![Go Report Card](https://goreportcard.com/badge/github.com/nekr0z/static-webmentions)](https://goreportcard.com/report/github.com/nekr0z/static-webmentions)
 
 ##### Table of Contents
 * [Why](#why)
