@@ -9,6 +9,8 @@ on:
 jobs:
   pre_release:
     runs-on: ubuntu-latest
+    env:
+      GOPROXY: direct
     steps:
       - uses: actions/checkout@v2.4.0
         with:
