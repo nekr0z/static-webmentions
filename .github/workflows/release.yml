@@ -17,9 +17,9 @@ jobs:
         with:
           go-version: 1.16
 
-      - name: install nekr0z/changelog
+      - name: install changelog
         run: |
-          go install github.com/nekr0z/changelog/cmd/changelog@latest
+          go install evgenykuznetsov.org/go/changelog/cmd/changelog@latest
 
       - uses: ruby/setup-ruby@v1
         with:
