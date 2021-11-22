@@ -1,4 +1,4 @@
-module github.com/nekr0z/static-webmentions
+module evgenykuznetsov.org/go/static-webmentions
 
 go 1.15
 

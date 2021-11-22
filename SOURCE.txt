@@ -1,2 +1,2 @@
 The source code for this software is available at
-https://github.com/nekr0z/static-webmentions
+https://evgenykuznetsov.org/go/static-webmentions
