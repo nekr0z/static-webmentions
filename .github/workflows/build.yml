@@ -1,0 +1,36 @@
+name: build
+on:
+  push:
+    branches:
+      - "master"
+    tags-ignore:
+      - "*"
+
+jobs:
+  pre_release:
+    runs-on: ubuntu-latest
+    env:
+      GOPROXY: direct
+    steps:
+      - uses: actions/checkout@v2.4.0
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: cache
+        uses: actions/cache@v2.1.6
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: |
+            ${{ runner.os }}-build-${{ hashFiles('**/go.mod') }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ hashFiles('**/go.mod') }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+
+      - name: build packages
+        run: |
+          bash <(VER=$(go generate); for ARCH in amd64 386 arm arm64; do GOARCH=$ARCH CGO_ENABLED=0 go build -ldflags "-s -w -buildid= -X main.version=$VER"; done)
