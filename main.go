@@ -321,12 +321,16 @@ func send(source, target string, wg *sync.WaitGroup, sc map[string]chan struct{}
 	sc[u.Host] <- struct{}{}
 	defer func() { <-sc[u.Host] }()
 
-	_, err = client.SendWebmention(endpoint, source, target)
+	r, err := client.SendWebmention(endpoint, source, target)
 	if err != nil {
 		fmt.Printf("could not send webmention for %v: %v\n", target, err)
 		return
 	}
 	fmt.Printf("webmention for %v sent\n", target)
+
+	if r.StatusCode == 201 {
+		fmt.Printf("created for %v is %s", source, r.Header.Get("location"))
+	}
 }
 
 func compareDirs(conf config) ([]string, error) {

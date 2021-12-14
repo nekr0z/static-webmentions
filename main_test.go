@@ -187,12 +187,22 @@ func TestSend(t *testing.T) {
 		fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, okay.URL)
 	}))
 	defer good.Close()
+	bridgy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Location", "https://silo.org/me/status/42")
+		w.WriteHeader(201)
+	}))
+	defer bridgy.Close()
+	creator := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, bridgy.URL)
+	}))
+	defer creator.Close()
 
 	tests := map[string]struct {
 		url  string
 		want string
 	}{
 		"good":        {good.URL, "webmention for " + good.URL + " sent"},
+		"bridgy":      {creator.URL, "webmention for " + creator.URL + " sent\ncreated for source is https://silo.org/me/status/42"},
 		"failed send": {bad.URL, "could not send webmention for " + bad.URL + ": response error: 400"},
 		"bad page":    {"destination", "could not discover endpoint for destination: Get \"destination\": unsupported protocol scheme \"\""},
 		"no endpoint": {empty.URL, "could not discover endpoint for " + empty.URL + ": no webmention rel found"},
@@ -210,7 +220,7 @@ func TestSend(t *testing.T) {
 			send(src, tc.url, &wg, sc, 15)
 			w.Close()
 			out, _ := ioutil.ReadAll(r)
-			got := strings.Split(string(out), "\n")[1]
+			got := strings.SplitN(strings.TrimRight(string(out), "\n"), "\n", 2)[1]
 			if tc.want != got {
 				t.Fatalf("\nwant %q,\ngot: %q", tc.want, got)
 			}
