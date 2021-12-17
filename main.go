@@ -329,7 +329,7 @@ func send(source, target string, wg *sync.WaitGroup, sc map[string]chan struct{}
 	fmt.Printf("webmention for %v sent\n", target)
 
 	if r.StatusCode == 201 {
-		fmt.Printf("created for %v is %s", source, r.Header.Get("location"))
+		fmt.Printf("created for %v is %s\n", source, r.Header.Get("location"))
 	}
 }
 
