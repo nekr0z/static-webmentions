@@ -46,7 +46,7 @@ func ping(hub string, feeds []string) {
 		fmt.Printf("pinging %s for: %s ... ", hub, feed)
 		resp, err := client.Do(r)
 		if err != nil {
-			fmt.Printf("error: %v", err)
+			fmt.Printf("error: %v\n", err)
 		} else {
 			fmt.Println(resp.Status)
 		}
