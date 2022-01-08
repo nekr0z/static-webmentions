@@ -205,7 +205,7 @@ func TestSend(t *testing.T) {
 		"bridgy":      {creator.URL, "webmention for " + creator.URL + " sent\ncreated for source is https://silo.org/me/status/42"},
 		"failed send": {bad.URL, "could not send webmention for " + bad.URL + ": response error: 400"},
 		"bad page":    {"destination", "could not discover endpoint for destination: Get \"destination\": unsupported protocol scheme \"\""},
-		"no endpoint": {empty.URL, "could not discover endpoint for " + empty.URL + ": no webmention rel found"},
+		"no endpoint": {empty.URL, "could not discover endpoint for " + empty.URL + ": no endpoint found"},
 	}
 
 	rescueStdout := os.Stdout
