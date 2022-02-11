@@ -217,7 +217,8 @@ func TestSend(t *testing.T) {
 			var wg sync.WaitGroup
 			wg.Add(1)
 			sc := make(map[string]chan struct{})
-			send(src, tc.url, &wg, sc, 15)
+			cc := concCounter{c: sc}
+			send(src, tc.url, &wg, &cc, 15)
 			w.Close()
 			out, _ := ioutil.ReadAll(r)
 			got := strings.SplitN(strings.TrimRight(string(out), "\n"), "\n", 2)[1]
@@ -226,6 +227,14 @@ func TestSend(t *testing.T) {
 			}
 		})
 	}
+
+	// test for race in sendMentions
+	mm := []mention{
+		mention{"source", good.URL},
+		mention{"source", bad.URL},
+		mention{"source", empty.URL},
+	}
+	sendMentions(mm, 1)
 }
 
 func stringSlicesEqual(a, b []string) bool {

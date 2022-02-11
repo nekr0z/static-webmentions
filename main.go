@@ -55,6 +55,11 @@ type mention struct {
 	Dest   string
 }
 
+type concCounter struct {
+	sync.Mutex
+	c map[string]chan struct{}
+}
+
 var version string = "custom"
 
 var errPageDeleted = errors.New("410")
@@ -135,10 +140,11 @@ func main() {
 
 func sendMentions(mentions []mention, smax int) {
 	sc := make(map[string]chan struct{})
+	cc := concCounter{c: sc}
 	var wg sync.WaitGroup
 	for _, m := range mentions {
 		wg.Add(1)
-		go send(m.Source, m.Dest, &wg, sc, smax)
+		go send(m.Source, m.Dest, &wg, &cc, smax)
 	}
 	wg.Wait()
 }
@@ -289,23 +295,25 @@ func readConfig(path string) (config, error) {
 	return conf, err
 }
 
-func send(source, target string, wg *sync.WaitGroup, sc map[string]chan struct{}, smax int) {
+func send(source, target string, wg *sync.WaitGroup, cc *concCounter, smax int) {
 	defer wg.Done()
 	u, err := url.Parse(target)
 	if err != nil {
 		fmt.Printf("  %v doesn't look like a parsable URL\n", target)
 		return
 	}
-	if _, ok := sc[u.Host]; !ok {
-		sc[u.Host] = make(chan struct{}, smax)
+	if _, ok := cc.c[u.Host]; !ok {
+		cc.Lock()
+		cc.c[u.Host] = make(chan struct{}, smax)
+		cc.Unlock()
 	}
-	sc[u.Host] <- struct{}{}
+	cc.c[u.Host] <- struct{}{}
 
 	fmt.Printf("processing webmention for %v ...\n", target)
 	client := webmention.New(nil)
 
 	endpoint, err := client.DiscoverEndpoint(target)
-	<-sc[u.Host]
+	<-cc.c[u.Host]
 	if err != nil {
 		fmt.Printf("could not discover endpoint for %v: %v\n", target, err)
 		return
@@ -315,11 +323,13 @@ func send(source, target string, wg *sync.WaitGroup, sc map[string]chan struct{}
 		fmt.Printf("%v: discovered enpoint (%v) doesn't look like a parsable URL\n", target, endpoint)
 		return
 	}
-	if _, ok := sc[u.Host]; !ok {
-		sc[u.Host] = make(chan struct{}, smax)
+	if _, ok := cc.c[u.Host]; !ok {
+		cc.Lock()
+		cc.c[u.Host] = make(chan struct{}, smax)
+		cc.Unlock()
 	}
-	sc[u.Host] <- struct{}{}
-	defer func() { <-sc[u.Host] }()
+	cc.c[u.Host] <- struct{}{}
+	defer func() { <-cc.c[u.Host] }()
 
 	r, err := client.SendWebmention(endpoint, source, target)
 	if err != nil {

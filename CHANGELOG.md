@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - lockout when ConcurrentRequests < 1
+- avoid data race when rate limiting the requests
 
 ## [0.7.2] - 2022-01-08
 ### Fixed
