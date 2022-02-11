@@ -277,9 +277,9 @@ func readConfig(path string) (config, error) {
 	if conf.concurFiles < 0 {
 		conf.concurFiles = 0
 	}
-	conf.concurReqs = cfg.Webmentions.ConcurrentRequests - 1
-	if conf.concurReqs < 0 {
-		conf.concurReqs = 0
+	conf.concurReqs = cfg.Webmentions.ConcurrentRequests
+	if conf.concurReqs < 1 {
+		conf.concurReqs = 1
 	}
 	if len(cfg.Params.FeedFiles) == 0 {
 		conf.feedFiles = []string{"index.xml"}
