@@ -48,7 +48,7 @@ jobs:
           files: "release/*"
 
       - name: trigger repository update
-        uses: appleboy/ssh-action@v0.1.6
+        uses: appleboy/ssh-action@v0.1.7
         with:
           host: evgkuz.org
           username: evgeny
