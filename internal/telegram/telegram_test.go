@@ -57,7 +57,9 @@ func TestSendTelegramMessage(t *testing.T) {
 
 		// Return a successful response
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"ok":true,"result":{"message_id":1}}`))
+		if _, err := w.Write([]byte(`{"ok":true,"result":{"message_id":1}}`)); err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -85,7 +87,9 @@ func TestSendTelegramMessageError(t *testing.T) {
 	// Create a test server that returns an error
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(`{"ok":false,"error_code":400,"description":"Bad Request: chat not found"}`))
+		if _, err := w.Write([]byte(`{"ok":false,"error_code":400,"description":"Bad Request: chat not found"}`)); err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -123,7 +127,9 @@ func TestTruncateMessage(t *testing.T) {
 		body, _ := io.ReadAll(r.Body)
 		receivedMessage = string(body)
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"ok":true,"result":{"message_id":1}}`))
+		if _, err := w.Write([]byte(`{"ok":true,"result":{"message_id":1}}`)); err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
 	}))
 	defer ts.Close()
 
@@ -178,11 +184,15 @@ func TestSendTelegramMessageRetry(t *testing.T) {
 			// Return 429 with retry_after for the first few attempts
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusTooManyRequests)
-			w.Write([]byte(`{"ok":false,"error_code":429,"description":"Too Many Requests: retry after 1","retry_after":1}`))
+			if _, err := w.Write([]byte(`{"ok":false,"error_code":429,"description":"Too Many Requests: retry after 1","retry_after":1}`)); err != nil {
+				t.Errorf("Failed to write response: %v", err)
+			}
 		} else {
 			// Return success on the final attempt
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte(`{"ok":true,"result":{"message_id":1}}`))
+			if _, err := w.Write([]byte(`{"ok":true,"result":{"message_id":1}}`)); err != nil {
+				t.Errorf("Failed to write response: %v", err)
+			}
 		}
 	}))
 	defer ts.Close()
@@ -222,7 +232,9 @@ func TestSendTelegramMessageRetryFailure(t *testing.T) {
 		// Always return 429
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusTooManyRequests)
-		w.Write([]byte(`{"ok":false,"error_code":429,"description":"Too Many Requests: retry after 1","retry_after":1}`))
+		if _, err := w.Write([]byte(`{"ok":false,"error_code":429,"description":"Too Many Requests: retry after 1","retry_after":1}`)); err != nil {
+			t.Errorf("Failed to write response: %v", err)
+		}
 	}))
 	defer ts.Close()
 

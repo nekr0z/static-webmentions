@@ -97,7 +97,10 @@ func sendTelegramMessageWithRetry(config Config, entry hentry.HEntry, maxRetries
 		// Read the response body
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			resp.Body.Close()
+			if closeErr := resp.Body.Close(); closeErr != nil {
+				// Log the error but continue with the main error
+				fmt.Printf("Failed to close response body: %v\n", closeErr)
+			}
 			if attempt < maxRetries {
 				time.Sleep(delay)
 				delay *= 2 // Exponential backoff
@@ -105,7 +108,10 @@ func sendTelegramMessageWithRetry(config Config, entry hentry.HEntry, maxRetries
 			}
 			return fmt.Errorf("failed to read response body: %w", err)
 		}
-		resp.Body.Close()
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			// Log the error but continue with the main error
+			fmt.Printf("Failed to close response body: %v\n", closeErr)
+		}
 
 		// Handle retriable errors
 		if isRetriableError(resp.StatusCode) {
