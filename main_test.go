@@ -248,3 +248,17 @@ func stringSlicesEqual(a, b []string) bool {
 	}
 	return true
 }
+
+func TestProcessTelegramNotifications(t *testing.T) {
+	conf, err := readConfig("config.toml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// We don't actually send notifications in tests, so this should not error
+	// even with invalid configuration
+	err = processTelegramNotifications(conf)
+	if err != nil {
+		t.Errorf("processTelegramNotifications failed: %v", err)
+	}
+}
