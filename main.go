@@ -32,6 +32,9 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/PuerkitoBio/goquery"
 	"willnorris.com/go/webmention"
+
+	"evgenykuznetsov.org/go/static-webmentions/internal/hentry"
+	"evgenykuznetsov.org/go/static-webmentions/internal/telegram"
 )
 
 type config struct {
@@ -47,6 +50,7 @@ type config struct {
 	feedFiles           []string
 	concurFiles         int
 	concurReqs          int
+	telegram            []telegram.Config
 }
 
 type mention struct {
@@ -133,6 +137,14 @@ func main() {
 			}
 		}
 		sendMentions(mentions, cfg.concurReqs)
+
+		if len(cfg.telegram) > 0 {
+			err := processTelegramNotifications(cfg)
+			if err != nil {
+				fmt.Printf("Warning: could not process Telegram notifications: %v\n", err)
+			}
+		}
+
 		fmt.Println("all sent")
 	}
 }
@@ -244,6 +256,55 @@ func findWork(cfg config) ([]mention, error) {
 	return mentions.mm, nil
 }
 
+// processTelegramNotifications processes h-entry feeds and sends notifications for new entries.
+func processTelegramNotifications(cfg config) error {
+	for _, tgConfig := range cfg.telegram {
+		for _, feedFile := range tgConfig.Feeds {
+			oldPath := filepath.Join(cfg.oldDir, feedFile)
+			newPath := filepath.Join(cfg.newDir, feedFile)
+
+			oldFile, err := os.Open(oldPath)
+			if err != nil {
+				fmt.Printf("Warning: could not open old feed file %s: %v\n", oldPath, err)
+				continue
+			}
+			defer oldFile.Close()
+
+			oldEntries, err := hentry.ExtractHEntries(oldFile)
+			if err != nil {
+				fmt.Printf("Warning: could not extract h-entries from old feed %s: %v\n", oldPath, err)
+				continue
+			}
+
+			newFile, err := os.Open(newPath)
+			if err != nil {
+				fmt.Printf("Warning: could not open new feed file %s: %v\n", newPath, err)
+				continue
+			}
+			defer newFile.Close()
+
+			newEntries, err := hentry.ExtractHEntries(newFile)
+			if err != nil {
+				fmt.Printf("Warning: could not extract h-entries from new feed %s: %v\n", newPath, err)
+				continue
+			}
+
+			newOnly := hentry.FindNewHEntries(oldEntries, newEntries)
+
+			for _, entry := range newOnly {
+				err := telegram.SendTelegramMessage(tgConfig, entry)
+				if err != nil {
+					fmt.Printf("Warning: could not send Telegram message: %v\n", err)
+				} else {
+					fmt.Printf("Sent Telegram notification for new entry: %s\n", entry.Name)
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func readConfig(path string) (config, error) {
 	type webm struct {
 		NewDir              string
@@ -264,6 +325,7 @@ func readConfig(path string) (config, error) {
 		BaseURL     string
 		Webmentions webm
 		Params      params
+		Telegram    []telegram.Config `toml:"telegram"`
 	}
 	var cfg configuration
 	_, err := toml.DecodeFile(path, &cfg)
@@ -278,6 +340,7 @@ func readConfig(path string) (config, error) {
 	conf.excludeSelectors = cfg.Webmentions.ExcludeSelectors
 	conf.storage = cfg.Webmentions.WebmentionsFile
 	conf.websubHub = cfg.Params.WebsubHub
+	conf.telegram = cfg.Telegram
 	conf.concurFiles = cfg.Webmentions.ConcurrentFiles - 1
 	if conf.concurFiles < 0 {
 		conf.concurFiles = 0

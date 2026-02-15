@@ -40,6 +40,23 @@ static-webmentions
 ### Configuration
 `static-webmentions` will look for a config file (`config.toml` in current directory by default). An example config file with all the supported options is [included](config.toml), all the options are fairly self-explanatory. [Hugo](https://gohugo.in) users may want to use the same `config.toml` that they store their website configuration in.
 
+#### Telegram Integration
+
+`static-webmentions` can also send notifications to Telegram channels when new posts are detected. To enable this feature, add a `[[telegram]]` section to your `config.toml`:
+
+```toml
+[[telegram]]
+botToken = "YOUR_BOT_TOKEN"
+chatID = "YOUR_CHAT_ID"
+feeds = ['index.html', 'posts/index.html']
+```
+
+- `botToken`: Your Telegram bot token
+- `chatID`: The ID of the chat/channel where notifications should be sent
+- `feeds`: List of HTML files to monitor for new h-entry posts
+
+The HTML files must contain properly formatted h-entry microformats with both `p-name` (title) and `u-url` (URL) elements.
+
 Several command-line flags can be used to override the options specified in the config file:
 ```
 -c [filename]
