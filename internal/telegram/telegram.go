@@ -59,9 +59,9 @@ func sendTelegramMessageWithRetry(config Config, entry hentry.HEntry, maxRetries
 
 	// Create the request payload
 	payload := map[string]string{
-		"chat_id":    config.ChatID,
-		"text":       message,
-		"parse_mode": "HTML",
+		"chat_id":                  config.ChatID,
+		"text":                     message,
+		"disable_web_page_preview": "false",
 	}
 
 	// Convert payload to JSON
