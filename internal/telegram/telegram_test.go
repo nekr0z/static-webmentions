@@ -46,7 +46,7 @@ func TestSendTelegramMessage(t *testing.T) {
 		expectedFields := []string{
 			`"chat_id":"123456789"`,
 			`"text":"Test Post\nhttps://example.com/test"`,
-			`"parse_mode":"HTML"`,
+			`"disable_web_page_preview":"false"`,
 		}
 
 		for _, field := range expectedFields {
