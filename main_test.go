@@ -17,7 +17,7 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -220,7 +220,7 @@ func TestSend(t *testing.T) {
 			cc := concCounter{c: sc}
 			send(src, tc.url, &wg, &cc, 15)
 			w.Close()
-			out, _ := ioutil.ReadAll(r)
+			out, _ := io.ReadAll(r)
 			got := strings.SplitN(strings.TrimRight(string(out), "\n"), "\n", 2)[1]
 			if tc.want != got {
 				t.Fatalf("\nwant %q,\ngot: %q", tc.want, got)
@@ -230,9 +230,9 @@ func TestSend(t *testing.T) {
 
 	// test for race in sendMentions
 	mm := []mention{
-		mention{"source", good.URL},
-		mention{"source", bad.URL},
-		mention{"source", empty.URL},
+		{"source", good.URL},
+		{"source", bad.URL},
+		{"source", empty.URL},
 	}
 	sendMentions(mm, 1)
 }
