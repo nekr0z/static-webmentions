@@ -23,7 +23,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -165,12 +164,12 @@ func saveMentionsToJSON(mentions []mention, file string) error {
 	if err != nil {
 		return err
 	}
-	err = ioutil.WriteFile(file, bs, 0644)
+	err = os.WriteFile(file, bs, 0644)
 	return err
 }
 
 func loadMentionsFromJSON(file string) (mentions []mention, err error) {
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	if err != nil {
 		return
 	}
