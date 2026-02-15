@@ -301,18 +301,20 @@ func send(source, target string, wg *sync.WaitGroup, cc *concCounter, smax int) 
 		fmt.Printf("  %v doesn't look like a parsable URL\n", target)
 		return
 	}
+	cc.Lock()
 	if _, ok := cc.c[u.Host]; !ok {
-		cc.Lock()
 		cc.c[u.Host] = make(chan struct{}, smax)
-		cc.Unlock()
 	}
-	cc.c[u.Host] <- struct{}{}
+	ch := cc.c[u.Host]
+	cc.Unlock()
+
+	ch <- struct{}{}
 
 	fmt.Printf("processing webmention for %v ...\n", target)
 	client := webmention.New(nil)
 
 	endpoint, err := client.DiscoverEndpoint(target)
-	<-cc.c[u.Host]
+	<-ch
 	if err != nil {
 		fmt.Printf("could not discover endpoint for %v: %v\n", target, err)
 		return
@@ -322,13 +324,15 @@ func send(source, target string, wg *sync.WaitGroup, cc *concCounter, smax int) 
 		fmt.Printf("%v: discovered enpoint (%v) doesn't look like a parsable URL\n", target, endpoint)
 		return
 	}
+	cc.Lock()
 	if _, ok := cc.c[u.Host]; !ok {
-		cc.Lock()
 		cc.c[u.Host] = make(chan struct{}, smax)
-		cc.Unlock()
 	}
-	cc.c[u.Host] <- struct{}{}
-	defer func() { <-cc.c[u.Host] }()
+	ch = cc.c[u.Host]
+	cc.Unlock()
+
+	ch <- struct{}{}
+	defer func() { <-ch }()
 
 	r, err := client.SendWebmention(endpoint, source, target)
 	if err != nil {
