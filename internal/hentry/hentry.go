@@ -19,6 +19,7 @@ package hentry
 import (
 	"fmt"
 	"io"
+	"net/url"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
@@ -37,6 +38,13 @@ func ExtractHEntries(r io.Reader) ([]HEntry, error) {
 		return nil, fmt.Errorf("failed to parse HTML: %w", err)
 	}
 
+	var pageURL string
+	if canonical := doc.Find("link[rel='canonical']").First(); canonical.Length() > 0 {
+		if href, exists := canonical.Attr("href"); exists {
+			pageURL = href
+		}
+	}
+
 	var entries []HEntry
 
 	doc.Find(".h-entry").Each(func(i int, s *goquery.Selection) {
@@ -50,7 +58,13 @@ func ExtractHEntries(r io.Reader) ([]HEntry, error) {
 		// Extract the URL (u-url)
 		if url := s.Find(".u-url").First(); url.Length() > 0 {
 			if href, exists := url.Attr("href"); exists {
-				entry.URL = href
+				// Resolve relative URLs to absolute URLs
+				if resolvedURL, err := resolveURL(href, pageURL); err == nil {
+					entry.URL = resolvedURL
+				} else {
+					// If resolution fails, use the original URL
+					entry.URL = href
+				}
 			}
 		}
 
@@ -58,6 +72,29 @@ func ExtractHEntries(r io.Reader) ([]HEntry, error) {
 	})
 
 	return entries, nil
+}
+
+func resolveURL(urlStr, pageURL string) (string, error) {
+	if u, err := url.ParseRequestURI(urlStr); err == nil && u.Scheme != "" && u.Host != "" {
+		return urlStr, nil
+	}
+
+	if pageURL == "" {
+		return "", fmt.Errorf("page URL is required for relative URL resolution")
+	}
+
+	base, err := url.Parse(pageURL)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse page URL: %w", err)
+	}
+
+	ref, err := url.Parse(urlStr)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse URL: %w", err)
+	}
+
+	resolved := base.ResolveReference(ref)
+	return resolved.String(), nil
 }
 
 // FindNewHEntries compares old and new entries and returns only the new ones.
