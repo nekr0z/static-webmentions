@@ -208,8 +208,7 @@ func findWork(cfg config) ([]mention, error) {
 	}
 
 	cc := make(chan struct{}, cfg.concurFiles)
-	wgDone := make(chan bool)
-	errors := make(chan error)
+
 	var wg sync.WaitGroup
 
 	for _, file := range files {
@@ -222,15 +221,15 @@ func findWork(cfg config) ([]mention, error) {
 			path := filepath.Join(cfg.oldDir, file)
 			oldtargets, _ := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
 			path = filepath.Join(cfg.newDir, file)
-			targets, err := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.newDir)
-			if err != nil {
-				if err == errPageDeleted {
-					targets, err = getSources(filepath.Join(cfg.oldDir, file), cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
-					if err != nil {
+			targets, localErr := getSources(path, cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.newDir)
+			if localErr != nil {
+				if errors.Is(localErr, errPageDeleted) {
+					targets, localErr = getSources(filepath.Join(cfg.oldDir, file), cfg.baseURL, cfg.excludeDestinations, cfg.excludeSelectors, cfg.oldDir)
+					if localErr != nil {
 						return
 					}
 				} else {
-					errors <- err
+					err = errors.Join(err, localErr)
 					return
 				}
 			}
@@ -243,21 +242,14 @@ func findWork(cfg config) ([]mention, error) {
 			}
 		}(file)
 	}
-	go func() {
-		wg.Wait()
-		close(wgDone)
-	}()
-	select {
-	case <-wgDone:
-		break
-	case err := <-errors:
-		return nil, err
-	}
-	return mentions.mm, nil
+
+	wg.Wait()
+
+	return mentions.mm, err
 }
 
 // processTelegramNotifications processes h-entry feeds and sends notifications for new entries.
-func processTelegramNotifications(cfg config) error {
+func processTelegramNotifications(cfg config) (err error) {
 	for _, tgConfig := range cfg.telegram {
 		for _, feedFile := range tgConfig.Feeds {
 			oldPath := filepath.Join(cfg.oldDir, feedFile)
@@ -268,7 +260,10 @@ func processTelegramNotifications(cfg config) error {
 				fmt.Printf("Warning: could not open old feed file %s: %v\n", oldPath, err)
 				continue
 			}
-			defer oldFile.Close()
+			defer func() {
+				closeErr := oldFile.Close()
+				err = errors.Join(err, closeErr)
+			}()
 
 			oldEntries, err := hentry.ExtractHEntries(oldFile)
 			if err != nil {
@@ -281,7 +276,10 @@ func processTelegramNotifications(cfg config) error {
 				fmt.Printf("Warning: could not open new feed file %s: %v\n", newPath, err)
 				continue
 			}
-			defer newFile.Close()
+			defer func() {
+				closeErr := newFile.Close()
+				err = errors.Join(err, closeErr)
+			}()
 
 			newEntries, err := hentry.ExtractHEntries(newFile)
 			if err != nil {
@@ -292,7 +290,7 @@ func processTelegramNotifications(cfg config) error {
 			newOnly := hentry.FindNewHEntries(oldEntries, newEntries)
 
 			for _, entry := range newOnly {
-				err := telegram.SendTelegramMessage(tgConfig, entry)
+				err = telegram.SendTelegramMessage(tgConfig, entry)
 				if err != nil {
 					fmt.Printf("Warning: could not send Telegram message: %v\n", err)
 				} else {
@@ -302,7 +300,7 @@ func processTelegramNotifications(cfg config) error {
 		}
 	}
 
-	return nil
+	return
 }
 
 func readConfig(path string) (config, error) {
@@ -432,7 +430,12 @@ func compareDirs(conf config) ([]string, error) {
 				return nil
 			}
 
-			if fileNotChanged(path, filepath.Join(conf.oldDir, relPath), conf.alsoWatch) {
+			ok, err := fileNotChanged(path, filepath.Join(conf.oldDir, relPath), conf.alsoWatch)
+			if err != nil {
+				return fmt.Errorf("%s: %w", path, err)
+			}
+
+			if ok {
 				return nil
 			}
 
@@ -446,23 +449,29 @@ func compareDirs(conf config) ([]string, error) {
 	return changedFiles, err
 }
 
-func fileNotChanged(oldPath, newPath string, addSel []string) bool {
+func fileNotChanged(oldPath, newPath string, addSel []string) (same bool, err error) {
 	of, err := os.Open(oldPath)
 	if err != nil {
-		return true
+		return true, nil
 	}
-	defer of.Close()
+	defer func() {
+		closeErr := of.Close()
+		err = errors.Join(err, closeErr)
+	}()
 
 	nf, err := os.Open(newPath)
 	if err != nil {
-		return false
+		return false, nil
 	}
-	defer nf.Close()
+	defer func() {
+		closeErr := nf.Close()
+		err = errors.Join(err, closeErr)
+	}()
 
 	o, _ := extractEntryAndSel(of, addSel)
 	n, _ := extractEntryAndSel(nf, addSel)
 
-	return o == n
+	return o == n, err
 }
 
 // extractEntryAndSel returns the HTML representation of the first h-entry found in `r`,
@@ -511,13 +520,16 @@ func pathExcluded(path, ex string) bool {
 	}
 }
 
-func getSources(path string, base string, exclude []string, excludeCSS []string, relPath string) ([]string, error) {
+func getSources(path string, base string, exclude []string, excludeCSS []string, relPath string) (srcs []string, err error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
 
-	defer f.Close()
+	defer func() {
+		closeErr := f.Close()
+		err = errors.Join(err, closeErr)
+	}()
 
 	if isDeleted(f) {
 		return nil, errPageDeleted

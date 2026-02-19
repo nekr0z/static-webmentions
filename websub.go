@@ -16,6 +16,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -71,7 +72,11 @@ func findFeeds(conf config) []string {
 				return nil
 			}
 
-			if !feedChanged(path, filepath.Join(conf.oldDir, relPath)) {
+			ok, err := feedChanged(path, filepath.Join(conf.oldDir, relPath))
+			if err != nil {
+				return err
+			}
+			if !ok {
 				return nil
 			}
 
@@ -86,24 +91,33 @@ func findFeeds(conf config) []string {
 	return feeds
 }
 
-func feedChanged(newFile, oldFile string) bool {
+func feedChanged(newFile, oldFile string) (ok bool, err error) {
 	cmp := equalfile.New(nil, equalfile.Options{}) // compare using single mode
 	r1, err := os.Open(newFile)
 	if err != nil {
-		return false
+		return false, nil
 	}
-	defer r1.Close()
+
+	defer func() {
+		closeErr := r1.Close()
+		err = errors.Join(err, closeErr)
+	}()
+
 	r2, err := os.Open(oldFile)
 	if err != nil {
-		return true
+		return true, nil
 	}
-	defer r2.Close()
+
+	defer func() {
+		closeErr := r2.Close()
+		err = errors.Join(err, closeErr)
+	}()
 
 	equal, err := cmp.CompareReader(r1, r2)
 	if err != nil {
-		return true
+		return true, nil
 	}
-	return !equal
+	return !equal, nil
 }
 
 func suffixInArray(s string, a []string) bool {
