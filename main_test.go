@@ -176,15 +176,24 @@ func TestSend(t *testing.T) {
 	defer fail.Close()
 
 	empty := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `nothing here!`)
+		_, err := fmt.Fprintf(w, `nothing here!`)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer empty.Close()
 	bad := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, fail.URL)
+		_, err := fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, fail.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer bad.Close()
 	good := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, okay.URL)
+		_, err := fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, okay.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer good.Close()
 	bridgy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -193,7 +202,10 @@ func TestSend(t *testing.T) {
 	}))
 	defer bridgy.Close()
 	creator := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, bridgy.URL)
+		_, err := fmt.Fprintf(w, `<link rel="webmention" href="%s" />`, bridgy.URL)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}))
 	defer creator.Close()
 
@@ -219,7 +231,10 @@ func TestSend(t *testing.T) {
 			sc := make(map[string]chan struct{})
 			cc := concCounter{c: sc}
 			send(src, tc.url, &wg, &cc, 15)
-			w.Close()
+			err := w.Close()
+			if err != nil {
+				t.Fatal(err)
+			}
 			out, _ := io.ReadAll(r)
 			got := strings.SplitN(strings.TrimRight(string(out), "\n"), "\n", 2)[1]
 			if tc.want != got {
