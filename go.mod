@@ -1,8 +1,6 @@
 module evgenykuznetsov.org/go/static-webmentions
 
-go 1.24.0
-
-toolchain go1.24.4
+go 1.25.0
 
 require (
 	github.com/BurntSushi/toml v1.6.0
@@ -13,5 +11,5 @@ require (
 
 require (
 	github.com/andybalholm/cascadia v1.3.3 // indirect
-	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/net v0.55.0 // indirect
 )
